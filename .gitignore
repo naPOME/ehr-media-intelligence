@@ -1,0 +1,10 @@
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+backend/*.egg-info/
+**/__pycache__/
+**/.env
+data/
+artifacts/
+.runtime/

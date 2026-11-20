@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ehr-media-intelligence"
+version = "0.1.0"
+description = "Synthetic EHR ingestion, FHIR R4, clinical summaries and semantic search"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "fhirclient>=4.2,<5",
+  "sentence-transformers>=3.4,<6",
+  "chromadb>=1,<2",
+  "openai>=2,<3",
+  "google-genai>=1,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11", "mypy>=1.15", "hypothesis>=6"]
+
+[project.scripts]
+ehr = "ehr.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ehr"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: real embedding model and persistent vector store"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["ehr"]
+ignore_missing_imports = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
