@@ -13,6 +13,7 @@ import { ErrorState } from "./Feedback";
 import { SummaryPanel } from "./SummaryPanel";
 import { RecordViewer } from "./RecordViewer";
 import { TimelinePanel } from "./TimelinePanel";
+import { FhirResourcesPanel } from "./FhirResourcesPanel";
 
 function ChartScroll({
   children,
@@ -215,6 +216,16 @@ export function PatientReview({
               </div>
             ),
           },
+          {
+            key: "fhir",
+            label: "FHIR resources",
+            children: (
+              <FhirResourcesPanel
+                active={tab === "fhir"}
+                patientId={patient.id}
+              />
+            ),
+          },
         ].map((item) => ({
           ...item,
           children: (
@@ -227,7 +238,9 @@ export function PatientReview({
                     ? "Summary scroll area"
                     : item.key === "timeline"
                       ? "Patient timeline scroll area"
-                      : "Patient records scroll area"
+                      : item.key === "records"
+                        ? "Patient records scroll area"
+                        : "FHIR resources scroll area"
               }
             >
               {item.children}

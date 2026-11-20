@@ -876,6 +876,38 @@ a {
 .patient-records {
   padding: 20px 22px;
 }
+.fhir-resources {
+  padding: 20px 22px;
+}
+.fhir-resources-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.fhir-resources-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 550;
+}
+.fhir-resources-heading > span,
+.fhir-resource-links {
+  color: var(--muted);
+  font-size: 12px;
+}
+.fhir-resource-detail {
+  display: grid;
+  gap: 3px;
+  min-width: 180px;
+}
+.fhir-resource-detail strong {
+  font-weight: 550;
+}
+.fhir-resource-links {
+  overflow-wrap: anywhere;
+}
 .records-intro {
   display: flex;
   justify-content: space-between;
