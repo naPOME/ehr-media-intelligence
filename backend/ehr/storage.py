@@ -46,6 +46,9 @@ class Store:
                     data TEXT, status TEXT NOT NULL, error TEXT, generated_at TEXT,
                     provider TEXT NOT NULL, model TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS ingestion_runs(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS intake_drafts(
+                    id TEXT PRIMARY KEY, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    filename TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL);
             """)
             for row in db.execute("SELECT id, data FROM records"):
                 record = Record.model_validate_json(row["data"])
@@ -251,3 +254,34 @@ class Store:
         with self.connection() as db:
             row = db.execute("SELECT data FROM ingestion_runs WHERE id=?", (run_id,)).fetchone()
             return json.loads(row[0]) if row else None
+
+    def save_intake_draft(
+        self, draft_id: str, filename: str, status: str, data: dict[str, Any]
+    ) -> None:
+        now = datetime.now(UTC).isoformat()
+        with self.connection() as db:
+            db.execute(
+                "INSERT INTO intake_drafts VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
+                "updated_at=excluded.updated_at,filename=excluded.filename,status=excluded.status,"
+                "data=excluded.data",
+                (draft_id, now, now, filename, status, json.dumps(data)),
+            )
+
+    def intake_draft(self, draft_id: str) -> dict[str, Any] | None:
+        with self.connection() as db:
+            row = db.execute("SELECT * FROM intake_drafts WHERE id=?", (draft_id,)).fetchone()
+            if row is None:
+                return None
+            value = dict(row)
+            value["data"] = json.loads(value["data"])
+            return value
+
+    def intake_drafts(self) -> list[dict[str, Any]]:
+        with self.connection() as db:
+            rows = db.execute("SELECT * FROM intake_drafts ORDER BY created_at DESC").fetchall()
+            values = []
+            for row in rows:
+                value = dict(row)
+                value["data"] = json.loads(value["data"])
+                values.append(value)
+            return values

@@ -1,6 +1,6 @@
 # Everwell Clinic - EHR Media Intelligence
 
-Everwell Clinic is a React and Ant Design workspace for finding patients, reviewing longitudinal records, and tracing AI summaries to the source. Its FastAPI backend cleans patient exports, validates FHIR R4 resources, and searches records by meaning. The included demo contains 50 fictional records across 10 patients.
+Everwell Clinic is a React and Ant Design workspace for finding patients, reviewing longitudinal records, importing EHR exports, and tracing AI summaries to the source. Its FastAPI backend previews cleaning decisions, reconciles duplicates and identity conflicts, validates FHIR R4 resources, and searches records by meaning. The included demo contains 50 fictional records across 10 patients.
 
 ## Run locally
 
@@ -44,6 +44,7 @@ Open http://127.0.0.1:5173. The development server forwards `/api` requests to t
 - `/patients` provides the full patient table. Search by name or MRN; filter by gender, summary state, or latest record date. Sorting and pagination run on the server. Column settings, density, selection across pages, and CSV exports are available in the toolbar.
 - `/patients/:id` opens the patient chart. The Timeline tab groups records into encounters and shows repeated lab values against their reference range. Type, date, and abnormal-result filters narrow the history. Selecting an item opens its source record. A `record` query parameter opens a particular source; `tab=summary` opens the summary. The patient banner stays visible while chart content scrolls.
 - `/records` searches across patients. Searches inside a chart are constrained to that patient before ranking.
+- `/intake` previews JSON, CSV, or TXT exports before publication. It shows every normalization change, duplicate or identity decision, and the FHIR resources validated for each record. Only records marked Ready or Update are published; rejected and duplicate rows remain visible in the audit.
 
 CSV export includes every matching row, regardless of the displayed page. Selected-row exports include the selected identities. Spreadsheet formula prefixes are escaped. Table preferences and patient selections are not saved in browser storage.
 
@@ -65,9 +66,25 @@ API types are generated from `frontend/openapi.json`. After changing the backend
 
 ## Input contract
 
-JSON input is an array of objects. CSV uses the same field names; its `labs` column contains a JSON array. The included files are complete examples.
+JSON input is an array of objects. CSV uses the same field names; its `labs` column contains a JSON array. Plain-text input uses `key: value` metadata, a blank line, and then the clinical text. Separate multiple text records with a line containing `---`. The included JSON and CSV files are complete examples. Each file is limited to 10 MB.
 
 Required fields are `record_id`, `mrn`, `name`, `kind`, `title`, and `text`. Supported kinds are `note`, `discharge`, `lab`, and `imaging`.
+
+```text
+record_id: referral-001
+source_system: scanned-referrals
+mrn: MRN-00011
+name: Patient 11
+dob: 14/03/1988
+gender: F
+kind: note
+title: Specialist referral
+record_date: 20/11/2026
+encounter_id: visit-001
+encounter_class: AMB
+
+Referral received for specialist review.
+```
 
 ```json
 {
@@ -146,6 +163,10 @@ The index records its dataset/model fingerprint. Changed data makes it stale, an
 | `GET /patients/{id}/timeline` | Encounter-grouped history, repeated lab trends, and abnormal-result counts |
 | `GET /records/{id}` | Cleaned record, original row, changes, and linked FHIR resources |
 | `GET /ingestion-runs/{id}` | Cleaning decisions, counts, issues, and Bundle validation results |
+| `GET /intake` | Recent intake previews and publication state |
+| `POST /intake/preview` | Parse, clean, reconcile, and validate an uploaded file without publishing it |
+| `GET /intake/{id}` | Saved preview with row-level source, normalized output, changes, and issues |
+| `POST /intake/{id}/publish` | Publish only accepted records and rebuild search when available |
 
 ```powershell
 Invoke-RestMethod -Uri 'http://127.0.0.1:8011/search?resource_type=DiagnosticReport&date_from=2026-03-01&date_to=2026-03-31' -Method Post -ContentType 'application/json' -Body '{"query":"abnormal kidney results"}'

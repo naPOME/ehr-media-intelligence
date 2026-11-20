@@ -21,6 +21,7 @@ import {
   AppstoreOutlined,
   QuestionCircleOutlined,
   ReloadOutlined,
+  InboxOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { getHealth } from "../lib/api";
@@ -32,13 +33,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? "patients"
     : pathname === "/records"
       ? "records"
-      : "overview";
+      : pathname === "/intake"
+        ? "intake"
+        : "overview";
   const pageLabel =
     view === "patients"
       ? "Patients"
       : view === "records"
         ? "Record search"
-        : "Overview";
+        : view === "intake"
+          ? "Data intake"
+          : "Overview";
   const [guideOpen, setGuideOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
@@ -64,6 +69,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             key: "records",
             icon: <FileSearchOutlined aria-hidden="true" />,
             label: <Link to="/records">Record search</Link>,
+          },
+          {
+            key: "intake",
+            icon: <InboxOutlined aria-hidden="true" />,
+            label: <Link to="/intake">Data intake</Link>,
           },
         ]}
       />

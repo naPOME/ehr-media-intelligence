@@ -18,6 +18,14 @@ from ehr.directory import (
     directory_rows,
     patient_csv,
 )
+from ehr.intake import (
+    IntakeDraftSummary,
+    IntakePreview,
+    IntakePreviewRequest,
+    IntakePublishResult,
+    create_preview,
+    publish_preview,
+)
 from ehr.models import (
     ClinicalSummary,
     Model,
@@ -266,6 +274,40 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
         if timeline is None:
             raise HTTPException(404, "Patient not found")
         return timeline
+
+    @app.get("/intake", response_model=list[IntakeDraftSummary])
+    def intake_drafts() -> list[IntakeDraftSummary]:
+        return [
+            IntakeDraftSummary(
+                id=draft["id"],
+                filename=draft["filename"],
+                created_at=draft["created_at"],
+                status=draft["status"],
+                counts=draft["data"]["preview"]["counts"],
+            )
+            for draft in database().intake_drafts()
+        ]
+
+    @app.post("/intake/preview", response_model=IntakePreview)
+    def intake_preview(body: IntakePreviewRequest) -> IntakePreview:
+        return create_preview(database(), body)
+
+    @app.get("/intake/{draft_id}", response_model=IntakePreview)
+    def intake_draft(draft_id: str) -> IntakePreview:
+        draft = database().intake_draft(draft_id)
+        if draft is None:
+            raise HTTPException(404, "Intake draft not found")
+        return IntakePreview.model_validate(draft["data"]["preview"])
+
+    @app.post("/intake/{draft_id}/publish", response_model=IntakePublishResult)
+    def intake_publish(draft_id: str) -> IntakePublishResult:
+        result = publish_preview(database(), draft_id)
+        if result is None:
+            raise HTTPException(404, "Intake draft not found")
+        if index is not None and (result.inserted or result.updated):
+            index.rebuild()
+            result = result.model_copy(update={"search_index_rebuilt": True})
+        return result
 
     @app.get("/records/{record_id}", response_model=RecordDetail)
     def record_detail(record_id: str) -> RecordDetail:

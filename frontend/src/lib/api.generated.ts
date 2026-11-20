@@ -157,6 +157,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Intake Drafts */
+        get: operations["intake_drafts_intake_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/intake/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Intake Preview */
+        post: operations["intake_preview_intake_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/intake/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Intake Draft */
+        get: operations["intake_draft_intake__draft_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/intake/{draft_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Intake Publish */
+        post: operations["intake_publish_intake__draft_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/records/{record_id}": {
         parameters: {
             query?: never;
@@ -224,6 +292,121 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IntakeCounts */
+        IntakeCounts: {
+            /** Total */
+            total: number;
+            /** Ready */
+            ready: number;
+            /** Updates */
+            updates: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Rejected */
+            rejected: number;
+        };
+        /** IntakeDraftSummary */
+        IntakeDraftSummary: {
+            /** Id */
+            id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Status */
+            status: string;
+            counts: components["schemas"]["IntakeCounts"];
+        };
+        /** IntakeItem */
+        IntakeItem: {
+            /** Id */
+            id: string;
+            /** Source Record Id */
+            source_record_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "update" | "duplicate" | "rejected";
+            /** Patient Name */
+            patient_name: string;
+            /** Mrn */
+            mrn: string;
+            /** Title */
+            title: string;
+            /** Kind */
+            kind: string;
+            /** Record Date */
+            record_date: string | null;
+            /** Changes */
+            changes: components["schemas"]["Change"][];
+            /** Issues */
+            issues: string[];
+            /** Fhir Resources */
+            fhir_resources: string[];
+            /** Original */
+            original: {
+                [key: string]: unknown;
+            };
+            /** Normalized */
+            normalized: {
+                [key: string]: unknown;
+            };
+        };
+        /** IntakePreview */
+        IntakePreview: {
+            /** Id */
+            id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "review" | "published" | "published_with_errors";
+            counts: components["schemas"]["IntakeCounts"];
+            /** Items */
+            items: components["schemas"]["IntakeItem"][];
+            /** File Issues */
+            file_issues: string[];
+        };
+        /** IntakePreviewRequest */
+        IntakePreviewRequest: {
+            /** Filename */
+            filename: string;
+            /** Content */
+            content: string;
+        };
+        /** IntakePublishResult */
+        IntakePublishResult: {
+            /** Draft Id */
+            draft_id: string;
+            /** Status */
+            status: string;
+            /** Inserted */
+            inserted: number;
+            /** Updated */
+            updated: number;
+            /** Unchanged */
+            unchanged: number;
+            /** Failed */
+            failed: number;
+            /** Errors */
+            errors: string[];
+            /**
+             * Search Index Rebuilt
+             * @default false
+             */
+            search_index_rebuilt: boolean;
         };
         /** LabTrend */
         LabTrend: {
@@ -831,6 +1014,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PatientTimeline"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    intake_drafts_intake_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeDraftSummary"][];
+                };
+            };
+        };
+    };
+    intake_preview_intake_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntakePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    intake_draft_intake__draft_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    intake_publish_intake__draft_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakePublishResult"];
                 };
             };
             /** @description Validation Error */

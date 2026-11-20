@@ -661,6 +661,144 @@
                                                                                     }
                                                                   }
                                                       },
+                  "/intake":  {
+                                  "get":  {
+                                              "summary":  "Intake Drafts",
+                                              "operationId":  "intake_drafts_intake_get",
+                                              "responses":  {
+                                                                "200":  {
+                                                                            "description":  "Successful Response",
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "items":  {
+                                                                                                                                                  "$ref":  "#/components/schemas/IntakeDraftSummary"
+                                                                                                                                              },
+                                                                                                                                    "type":  "array",
+                                                                                                                                    "title":  "Response Intake Drafts Intake Get"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        }
+                                                                        }
+                                                            }
+                                          }
+                              },
+                  "/intake/preview":  {
+                                          "post":  {
+                                                       "summary":  "Intake Preview",
+                                                       "operationId":  "intake_preview_intake_preview_post",
+                                                       "requestBody":  {
+                                                                           "content":  {
+                                                                                           "application/json":  {
+                                                                                                                    "schema":  {
+                                                                                                                                   "$ref":  "#/components/schemas/IntakePreviewRequest"
+                                                                                                                               }
+                                                                                                                }
+                                                                                       },
+                                                                           "required":  true
+                                                                       },
+                                                       "responses":  {
+                                                                         "200":  {
+                                                                                     "description":  "Successful Response",
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/IntakePreview"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 },
+                                                                         "422":  {
+                                                                                     "description":  "Validation Error",
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 }
+                                                                     }
+                                                   }
+                                      },
+                  "/intake/{draft_id}":  {
+                                             "get":  {
+                                                         "summary":  "Intake Draft",
+                                                         "operationId":  "intake_draft_intake__draft_id__get",
+                                                         "parameters":  [
+                                                                            {
+                                                                                "name":  "draft_id",
+                                                                                "in":  "path",
+                                                                                "required":  true,
+                                                                                "schema":  {
+                                                                                               "type":  "string",
+                                                                                               "title":  "Draft Id"
+                                                                                           }
+                                                                            }
+                                                                        ],
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "Successful Response",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/IntakePreview"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   },
+                                                                           "422":  {
+                                                                                       "description":  "Validation Error",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   }
+                                                                       }
+                                                     }
+                                         },
+                  "/intake/{draft_id}/publish":  {
+                                                     "post":  {
+                                                                  "summary":  "Intake Publish",
+                                                                  "operationId":  "intake_publish_intake__draft_id__publish_post",
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "draft_id",
+                                                                                         "in":  "path",
+                                                                                         "required":  true,
+                                                                                         "schema":  {
+                                                                                                        "type":  "string",
+                                                                                                        "title":  "Draft Id"
+                                                                                                    }
+                                                                                     }
+                                                                                 ],
+                                                                  "responses":  {
+                                                                                    "200":  {
+                                                                                                "description":  "Successful Response",
+                                                                                                "content":  {
+                                                                                                                "application/json":  {
+                                                                                                                                         "schema":  {
+                                                                                                                                                        "$ref":  "#/components/schemas/IntakePublishResult"
+                                                                                                                                                    }
+                                                                                                                                     }
+                                                                                                            }
+                                                                                            },
+                                                                                    "422":  {
+                                                                                                "description":  "Validation Error",
+                                                                                                "content":  {
+                                                                                                                "application/json":  {
+                                                                                                                                         "schema":  {
+                                                                                                                                                        "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                                    }
+                                                                                                                                     }
+                                                                                                            }
+                                                                                            }
+                                                                                }
+                                                              }
+                                                 },
                   "/records/{record_id}":  {
                                                "get":  {
                                                            "summary":  "Record Detail",
@@ -846,6 +984,302 @@
                                                                                   },
                                                                    "type":  "object",
                                                                    "title":  "HTTPValidationError"
+                                                               },
+                                       "IntakeCounts":  {
+                                                            "properties":  {
+                                                                               "total":  {
+                                                                                             "type":  "integer",
+                                                                                             "title":  "Total"
+                                                                                         },
+                                                                               "ready":  {
+                                                                                             "type":  "integer",
+                                                                                             "title":  "Ready"
+                                                                                         },
+                                                                               "updates":  {
+                                                                                               "type":  "integer",
+                                                                                               "title":  "Updates"
+                                                                                           },
+                                                                               "duplicates":  {
+                                                                                                  "type":  "integer",
+                                                                                                  "title":  "Duplicates"
+                                                                                              },
+                                                                               "rejected":  {
+                                                                                                "type":  "integer",
+                                                                                                "title":  "Rejected"
+                                                                                            }
+                                                                           },
+                                                            "additionalProperties":  false,
+                                                            "type":  "object",
+                                                            "required":  [
+                                                                             "total",
+                                                                             "ready",
+                                                                             "updates",
+                                                                             "duplicates",
+                                                                             "rejected"
+                                                                         ],
+                                                            "title":  "IntakeCounts"
+                                                        },
+                                       "IntakeDraftSummary":  {
+                                                                  "properties":  {
+                                                                                     "id":  {
+                                                                                                "type":  "string",
+                                                                                                "title":  "Id"
+                                                                                            },
+                                                                                     "filename":  {
+                                                                                                      "type":  "string",
+                                                                                                      "title":  "Filename"
+                                                                                                  },
+                                                                                     "created_at":  {
+                                                                                                        "type":  "string",
+                                                                                                        "format":  "date-time",
+                                                                                                        "title":  "Created At"
+                                                                                                    },
+                                                                                     "status":  {
+                                                                                                    "type":  "string",
+                                                                                                    "title":  "Status"
+                                                                                                },
+                                                                                     "counts":  {
+                                                                                                    "$ref":  "#/components/schemas/IntakeCounts"
+                                                                                                }
+                                                                                 },
+                                                                  "additionalProperties":  false,
+                                                                  "type":  "object",
+                                                                  "required":  [
+                                                                                   "id",
+                                                                                   "filename",
+                                                                                   "created_at",
+                                                                                   "status",
+                                                                                   "counts"
+                                                                               ],
+                                                                  "title":  "IntakeDraftSummary"
+                                                              },
+                                       "IntakeItem":  {
+                                                          "properties":  {
+                                                                             "id":  {
+                                                                                        "type":  "string",
+                                                                                        "title":  "Id"
+                                                                                    },
+                                                                             "source_record_id":  {
+                                                                                                      "type":  "string",
+                                                                                                      "title":  "Source Record Id"
+                                                                                                  },
+                                                                             "status":  {
+                                                                                            "type":  "string",
+                                                                                            "enum":  [
+                                                                                                         "ready",
+                                                                                                         "update",
+                                                                                                         "duplicate",
+                                                                                                         "rejected"
+                                                                                                     ],
+                                                                                            "title":  "Status"
+                                                                                        },
+                                                                             "patient_name":  {
+                                                                                                  "type":  "string",
+                                                                                                  "title":  "Patient Name"
+                                                                                              },
+                                                                             "mrn":  {
+                                                                                         "type":  "string",
+                                                                                         "title":  "Mrn"
+                                                                                     },
+                                                                             "title":  {
+                                                                                           "type":  "string",
+                                                                                           "title":  "Title"
+                                                                                       },
+                                                                             "kind":  {
+                                                                                          "type":  "string",
+                                                                                          "title":  "Kind"
+                                                                                      },
+                                                                             "record_date":  {
+                                                                                                 "anyOf":  [
+                                                                                                               {
+                                                                                                                   "type":  "string",
+                                                                                                                   "format":  "date"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "type":  "null"
+                                                                                                               }
+                                                                                                           ],
+                                                                                                 "title":  "Record Date"
+                                                                                             },
+                                                                             "changes":  {
+                                                                                             "items":  {
+                                                                                                           "$ref":  "#/components/schemas/Change"
+                                                                                                       },
+                                                                                             "type":  "array",
+                                                                                             "title":  "Changes"
+                                                                                         },
+                                                                             "issues":  {
+                                                                                            "items":  {
+                                                                                                          "type":  "string"
+                                                                                                      },
+                                                                                            "type":  "array",
+                                                                                            "title":  "Issues"
+                                                                                        },
+                                                                             "fhir_resources":  {
+                                                                                                    "items":  {
+                                                                                                                  "type":  "string"
+                                                                                                              },
+                                                                                                    "type":  "array",
+                                                                                                    "title":  "Fhir Resources"
+                                                                                                },
+                                                                             "original":  {
+                                                                                              "additionalProperties":  true,
+                                                                                              "type":  "object",
+                                                                                              "title":  "Original"
+                                                                                          },
+                                                                             "normalized":  {
+                                                                                                "additionalProperties":  true,
+                                                                                                "type":  "object",
+                                                                                                "title":  "Normalized"
+                                                                                            }
+                                                                         },
+                                                          "additionalProperties":  false,
+                                                          "type":  "object",
+                                                          "required":  [
+                                                                           "id",
+                                                                           "source_record_id",
+                                                                           "status",
+                                                                           "patient_name",
+                                                                           "mrn",
+                                                                           "title",
+                                                                           "kind",
+                                                                           "record_date",
+                                                                           "changes",
+                                                                           "issues",
+                                                                           "fhir_resources",
+                                                                           "original",
+                                                                           "normalized"
+                                                                       ],
+                                                          "title":  "IntakeItem"
+                                                      },
+                                       "IntakePreview":  {
+                                                             "properties":  {
+                                                                                "id":  {
+                                                                                           "type":  "string",
+                                                                                           "title":  "Id"
+                                                                                       },
+                                                                                "filename":  {
+                                                                                                 "type":  "string",
+                                                                                                 "title":  "Filename"
+                                                                                             },
+                                                                                "created_at":  {
+                                                                                                   "type":  "string",
+                                                                                                   "format":  "date-time",
+                                                                                                   "title":  "Created At"
+                                                                                               },
+                                                                                "status":  {
+                                                                                               "type":  "string",
+                                                                                               "enum":  [
+                                                                                                            "review",
+                                                                                                            "published",
+                                                                                                            "published_with_errors"
+                                                                                                        ],
+                                                                                               "title":  "Status"
+                                                                                           },
+                                                                                "counts":  {
+                                                                                               "$ref":  "#/components/schemas/IntakeCounts"
+                                                                                           },
+                                                                                "items":  {
+                                                                                              "items":  {
+                                                                                                            "$ref":  "#/components/schemas/IntakeItem"
+                                                                                                        },
+                                                                                              "type":  "array",
+                                                                                              "title":  "Items"
+                                                                                          },
+                                                                                "file_issues":  {
+                                                                                                    "items":  {
+                                                                                                                  "type":  "string"
+                                                                                                              },
+                                                                                                    "type":  "array",
+                                                                                                    "title":  "File Issues"
+                                                                                                }
+                                                                            },
+                                                             "additionalProperties":  false,
+                                                             "type":  "object",
+                                                             "required":  [
+                                                                              "id",
+                                                                              "filename",
+                                                                              "created_at",
+                                                                              "status",
+                                                                              "counts",
+                                                                              "items",
+                                                                              "file_issues"
+                                                                          ],
+                                                             "title":  "IntakePreview"
+                                                         },
+                                       "IntakePreviewRequest":  {
+                                                                    "properties":  {
+                                                                                       "filename":  {
+                                                                                                        "type":  "string",
+                                                                                                        "maxLength":  255,
+                                                                                                        "minLength":  1,
+                                                                                                        "title":  "Filename"
+                                                                                                    },
+                                                                                       "content":  {
+                                                                                                       "type":  "string",
+                                                                                                       "maxLength":  10000000,
+                                                                                                       "title":  "Content"
+                                                                                                   }
+                                                                                   },
+                                                                    "additionalProperties":  false,
+                                                                    "type":  "object",
+                                                                    "required":  [
+                                                                                     "filename",
+                                                                                     "content"
+                                                                                 ],
+                                                                    "title":  "IntakePreviewRequest"
+                                                                },
+                                       "IntakePublishResult":  {
+                                                                   "properties":  {
+                                                                                      "draft_id":  {
+                                                                                                       "type":  "string",
+                                                                                                       "title":  "Draft Id"
+                                                                                                   },
+                                                                                      "status":  {
+                                                                                                     "type":  "string",
+                                                                                                     "title":  "Status"
+                                                                                                 },
+                                                                                      "inserted":  {
+                                                                                                       "type":  "integer",
+                                                                                                       "title":  "Inserted"
+                                                                                                   },
+                                                                                      "updated":  {
+                                                                                                      "type":  "integer",
+                                                                                                      "title":  "Updated"
+                                                                                                  },
+                                                                                      "unchanged":  {
+                                                                                                        "type":  "integer",
+                                                                                                        "title":  "Unchanged"
+                                                                                                    },
+                                                                                      "failed":  {
+                                                                                                     "type":  "integer",
+                                                                                                     "title":  "Failed"
+                                                                                                 },
+                                                                                      "errors":  {
+                                                                                                     "items":  {
+                                                                                                                   "type":  "string"
+                                                                                                               },
+                                                                                                     "type":  "array",
+                                                                                                     "title":  "Errors"
+                                                                                                 },
+                                                                                      "search_index_rebuilt":  {
+                                                                                                                   "type":  "boolean",
+                                                                                                                   "title":  "Search Index Rebuilt",
+                                                                                                                   "default":  false
+                                                                                                               }
+                                                                                  },
+                                                                   "additionalProperties":  false,
+                                                                   "type":  "object",
+                                                                   "required":  [
+                                                                                    "draft_id",
+                                                                                    "status",
+                                                                                    "inserted",
+                                                                                    "updated",
+                                                                                    "unchanged",
+                                                                                    "failed",
+                                                                                    "errors"
+                                                                                ],
+                                                                   "title":  "IntakePublishResult"
                                                                },
                                        "LabTrend":  {
                                                         "properties":  {

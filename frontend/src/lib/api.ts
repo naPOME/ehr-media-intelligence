@@ -11,6 +11,10 @@ export type RecordDetail = components["schemas"]["RecordDetail"];
 export type SummaryItem = components["schemas"]["SummaryItem"];
 export type ClinicalSummary = components["schemas"]["ClinicalSummary"];
 export type PatientTimeline = components["schemas"]["PatientTimeline"];
+export type IntakePreview = components["schemas"]["IntakePreview"];
+export type IntakeItem = components["schemas"]["IntakeItem"];
+export type IntakeDraftSummary = components["schemas"]["IntakeDraftSummary"];
+export type IntakePublishResult = components["schemas"]["IntakePublishResult"];
 export type SearchFilters = {
   patientId?: string;
   resourceType?: ResourceType;
@@ -96,6 +100,35 @@ export async function getPatientTimeline(id: string, signal: AbortSignal) {
   const result = await client.GET("/patients/{patient_id}/timeline", {
     params: { path: { patient_id: id } },
     signal: requestSignal(signal),
+  });
+  if (!result.data || !result.response.ok)
+    throw new ApiError(result.response.status);
+  return result.data;
+}
+
+export async function getIntakeDrafts(signal: AbortSignal) {
+  const result = await client.GET("/intake", {
+    signal: requestSignal(signal),
+  });
+  if (!result.data || !result.response.ok)
+    throw new ApiError(result.response.status);
+  return result.data;
+}
+
+export async function previewIntake(filename: string, content: string) {
+  const result = await client.POST("/intake/preview", {
+    body: { filename, content },
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!result.data || !result.response.ok)
+    throw new ApiError(result.response.status);
+  return result.data;
+}
+
+export async function publishIntake(draftId: string) {
+  const result = await client.POST("/intake/{draft_id}/publish", {
+    params: { path: { draft_id: draftId } },
+    signal: AbortSignal.timeout(60_000),
   });
   if (!result.data || !result.response.ok)
     throw new ApiError(result.response.status);

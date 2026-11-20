@@ -27,6 +27,12 @@ const RecordWorkspace = lazy(() =>
     default: module.RecordWorkspace,
   })),
 );
+const DataIntake = lazy(() =>
+  import("./pages/DataIntake").then((module) => ({
+    default: module.DataIntake,
+  })),
+);
+
 function PatientChart() {
   const { patientId = "" } = useParams();
   const [params] = useSearchParams();
@@ -72,7 +78,9 @@ export function App() {
         ? "Patients"
         : location.pathname === "/records"
           ? "Record search"
-          : "Overview";
+          : location.pathname === "/intake"
+            ? "Data intake"
+            : "Overview";
     document.title = `${title} | Everwell Clinic`;
   }, [location.pathname]);
   return (
@@ -100,6 +108,7 @@ export function App() {
               />
             }
           />
+          <Route path="/intake" element={<DataIntake />} />
           <Route path="*" element={<Navigate to="/overview" replace />} />
         </Routes>
       </Suspense>

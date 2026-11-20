@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
 import re
 from datetime import date, datetime
@@ -133,68 +134,119 @@ def clean_record(raw: dict[str, Any], source_file: str) -> Record:
     )
 
 
-def read_records(path: Path) -> list[Any]:
-    if path.stat().st_size > 10_000_000:
+def _normalise_csv_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for row in rows:
+        for key in (
+            "dob",
+            "gender",
+            "record_date",
+            "encounter_id",
+            "encounter_class",
+            "patient_id",
+        ):
+            if not row.get(key):
+                row[key] = None
+    return rows
+
+
+def _read_text_records(content: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for block_number, block in enumerate(re.split(r"(?m)^\s*---\s*$", content), start=1):
+        if not block.strip():
+            continue
+        headers, separator, body = block.strip().partition("\n\n")
+        if not separator:
+            raise ValueError(
+                f"Text record {block_number} must separate metadata and clinical text "
+                "with a blank line"
+            )
+        row: dict[str, Any] = {}
+        for line in headers.splitlines():
+            key, separator, value = line.partition(":")
+            if not separator or not key.strip():
+                raise ValueError(
+                    f"Text record {block_number} has an invalid metadata line: {line!r}"
+                )
+            row[key.strip()] = value.strip() or None
+        row["text"] = body.strip()
+        if row.get("labs"):
+            row["labs"] = json.loads(str(row["labs"]))
+        records.append(row)
+    if not records:
+        raise ValueError("Text input contains no records")
+    return records
+
+
+def read_records_content(filename: str, content: str) -> list[Any]:
+    if len(content.encode("utf-8")) > 10_000_000:
         raise ValueError("Input file exceeds 10 MB")
-    if path.suffix.lower() == ".json":
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    content = content.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
+    suffix = Path(filename).suffix.lower()
+    if suffix == ".json":
+        data = json.loads(content)
         if not isinstance(data, list):
             raise ValueError("JSON input must be an array of records")
         return data
-    if path.suffix.lower() == ".csv":
-        with path.open(encoding="utf-8-sig", newline="") as stream:
-            rows = list(csv.DictReader(stream))
-        for row in rows:
-            for key in (
-                "dob",
-                "gender",
-                "record_date",
-                "encounter_id",
-                "encounter_class",
-                "patient_id",
-            ):
-                if not row.get(key):
-                    row[key] = None
-        return rows
-    raise ValueError("Supported input formats: .json and .csv")
+    if suffix == ".csv":
+        return _normalise_csv_rows(list(csv.DictReader(io.StringIO(content))))
+    if suffix == ".txt":
+        return _read_text_records(content)
+    raise ValueError("Supported input formats: .json, .csv and .txt")
+
+
+def read_records(path: Path) -> list[Any]:
+    if path.stat().st_size > 10_000_000:
+        raise ValueError("Input file exceeds 10 MB")
+    return read_records_content(path.name, path.read_text(encoding="utf-8-sig"))
+
+
+def clean_rows(rows: list[Any], source_file: str) -> CleaningResult:
+    result = CleaningResult()
+    seen: dict[str, str] = {}
+    for position, raw in enumerate(rows, start=1):
+        label = (
+            str(raw.get("record_id", f"row-{position}")) if isinstance(raw, dict) else str(position)
+        )
+        try:
+            record = clean_record(raw, source_file)
+            digest = record.clinical_hash()
+            if record.id in seen:
+                if seen[record.id] != digest:
+                    result.records = [item for item in result.records if item.id != record.id]
+                    seen[record.id] = "conflicting"
+                    raise ValueError("Conflicting copies of the same source record in this import")
+                result.issues.append(
+                    Issue(
+                        record_id=label,
+                        field="record_id",
+                        severity="warning",
+                        message="Duplicate source record skipped",
+                    )
+                )
+                continue
+            seen[record.id] = digest
+            result.records.append(record)
+        except (ValueError, TypeError, ValidationError) as exc:
+            result.issues.append(Issue(record_id=label, field="record", message=str(exc)))
+    return result
+
+
+def clean_content(filename: str, content: str) -> CleaningResult:
+    try:
+        return clean_rows(read_records_content(filename, content), filename)
+    except (ValueError, csv.Error, json.JSONDecodeError) as exc:
+        return CleaningResult(issues=[Issue(record_id=filename, field="file", message=str(exc))])
 
 
 def clean_files(paths: list[Path]) -> CleaningResult:
     result = CleaningResult()
-    seen: dict[str, str] = {}
     for path in paths:
         try:
             rows = read_records(path)
         except (OSError, ValueError, csv.Error) as exc:
             result.issues.append(Issue(record_id=path.name, field="file", message=str(exc)))
             continue
-        for position, raw in enumerate(rows, start=1):
-            label = (
-                str(raw.get("record_id", f"row-{position}"))
-                if isinstance(raw, dict)
-                else str(position)
-            )
-            try:
-                record = clean_record(raw, path.name)
-                digest = record.clinical_hash()
-                if record.id in seen:
-                    if seen[record.id] != digest:
-                        result.records = [item for item in result.records if item.id != record.id]
-                        seen[record.id] = "conflicting"
-                        raise ValueError(
-                            "Conflicting copies of the same source record in this import"
-                        )
-                    result.issues.append(
-                        Issue(
-                            record_id=label,
-                            field="record_id",
-                            severity="warning",
-                            message="Duplicate source record skipped",
-                        )
-                    )
-                    continue
-                seen[record.id] = digest
-                result.records.append(record)
-            except (ValueError, TypeError, ValidationError) as exc:
-                result.issues.append(Issue(record_id=label, field="record", message=str(exc)))
+        cleaned = clean_rows(rows, path.name)
+        result.records.extend(cleaned.records)
+        result.issues.extend(cleaned.issues)
     return result
