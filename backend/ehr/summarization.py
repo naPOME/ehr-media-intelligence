@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from ehr.config import Settings
 from ehr.models import ClinicalSummary, content_hash
@@ -137,7 +137,9 @@ def validate_summary(summary: ClinicalSummary, document_ids: set[str]) -> Clinic
     return summary
 
 
-def summarize_patient(store: Store, patient_id: str, provider: SummaryProvider) -> str:
+def summarize_patient(
+    store: Store, patient_id: str, provider: SummaryProvider
+) -> Literal["generated", "cached"]:
     bundle = store.bundle(patient_id)
     if bundle is None:
         raise ValueError("Patient has no validated FHIR Bundle")

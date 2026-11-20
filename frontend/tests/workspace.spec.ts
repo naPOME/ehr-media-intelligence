@@ -207,10 +207,10 @@ test("summary states do not block source review and mobile focus returns to its 
     .getByRole("tab", { name: "Patient summary", exact: true })
     .click();
   await expect(
-    panel.getByRole("heading", { name: "AI summary not available" }),
+    panel.getByRole("heading", { name: "Create a patient summary" }),
   ).toBeVisible();
   await panel
-    .getByRole("button", { name: "Review source records", exact: true })
+    .getByRole("button", { name: "View records", exact: true })
     .click();
   await expect(
     panel.getByRole("tab", { name: "Source record", exact: true }),

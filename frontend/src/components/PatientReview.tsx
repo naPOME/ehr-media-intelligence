@@ -164,6 +164,7 @@ export function PatientReview({
             children: (
               <SummaryPanel
                 onSource={openSource}
+                patientId={patient.id}
                 records={records}
                 summary={summary}
               />

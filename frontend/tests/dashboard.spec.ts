@@ -160,14 +160,19 @@ test("patient table sends server paging and sorting, preserves selection and exp
     page.getByRole("columnheader", { name: "Date of birth" }),
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Toggle patient filters", exact: true })
+    .click();
   const filteredRequest = page.waitForRequest(
     (req) => new URL(req.url()).searchParams.get("gender") === "female",
   );
   await page.getByRole("combobox", { name: "Filter by gender" }).click();
   await page.getByText("Female", { exact: true }).last().click();
   await filteredRequest;
-  await page.getByRole("button", { name: "Reset filters" }).click();
+  await page
+    .getByRole("group", { name: "Patient filters" })
+    .getByRole("button", { name: "Reset", exact: true })
+    .click();
   await expect(
     page.getByRole("combobox", { name: "Filter by gender" }),
   ).toHaveValue("");

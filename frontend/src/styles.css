@@ -311,6 +311,11 @@ a {
   padding: 2px 0;
   height: 25px;
 }
+.search-examples .ant-btn-link:not(:disabled),
+.search-examples .ant-btn-link:not(:disabled):hover,
+.search-examples .ant-btn-link:not(:disabled):active {
+  color: #24558f;
+}
 .query-context {
   display: flex;
   justify-content: space-between;
@@ -678,13 +683,47 @@ a {
 }
 .review-tabs > .ant-tabs-nav {
   margin: 0;
-  padding: 0 22px;
+  padding: 8px 22px;
   background: white;
+  border-bottom: 1px solid #e7ebf0;
   flex-shrink: 0;
 }
+.review-tabs > .ant-tabs-nav::before {
+  display: none;
+}
+.review-tabs .ant-tabs-nav-list {
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #e3e8ee;
+  border-radius: 10px;
+  background: #f3f6f9;
+}
 .review-tabs .ant-tabs-tab {
-  padding: 12px 0;
+  margin: 0 !important;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: 7px;
   font-size: 13px;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+.review-tabs .ant-tabs-tab:hover {
+  color: var(--primary);
+  background: #e9eff8;
+}
+.review-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  border-color: #d9e1eb;
+  background: white;
+  box-shadow: 0 1px 3px rgb(38 56 78 / 10%);
+}
+.review-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary);
+  font-weight: 600;
+}
+.review-tabs .ant-tabs-ink-bar {
+  display: none;
 }
 .review-tabs .ant-tabs-body-holder {
   overflow-y: auto;
@@ -913,9 +952,24 @@ a {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  margin-bottom: 18px;
 }
-.summary-heading > span:last-child {
+.summary-title {
+  width: 100%;
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 650;
+}
+.summary-heading-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.summary-heading-meta > span {
   color: #4a6076;
   font-size: 12px;
 }
@@ -933,9 +987,30 @@ a {
   line-height: 1.8;
   margin: 12px 0 23px;
 }
+.summary-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
 .summary-section {
-  border-top: 1px solid var(--border);
-  padding: 17px 0 8px;
+  min-width: 0;
+  padding: 17px 18px;
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  background: #fff;
+}
+.summary-section-0 {
+  grid-column: 1 / -1;
+  background: #f3f7fd;
+  border-color: #dce6f4;
+}
+.summary-section-2 {
+  grid-row: span 2;
+}
+.summary-section-3 {
+  background: #fffcf5;
+  border-color: #eee4cd;
 }
 .summary-section h3 {
   font-size: 13px;
@@ -947,19 +1022,42 @@ a {
 .summary-section > p {
   color: #2b4257;
   font-size: 14px;
-  line-height: 1.85;
-  margin-bottom: 4px;
+  line-height: 1.65;
+  margin-bottom: 9px;
   overflow-wrap: anywhere;
 }
 .source-citations {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  padding-bottom: 8px;
+  gap: 6px;
 }
 .source-citations .ant-btn {
-  padding: 0;
-  font-size: 12px;
+  height: auto;
+  max-width: 100%;
+  padding: 3px 7px;
+  border: 1px solid #dfe7f0;
+  border-radius: 6px;
+  background: #f8fafd;
+  color: #24558f;
+  font-size: 11px;
+  white-space: normal;
+  text-align: left;
+}
+.source-citations .ant-btn > span:not(.anticon) {
+  overflow-wrap: anywhere;
+}
+.summary-item + .summary-item {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #edf0f4;
+}
+@media (max-width: 700px) {
+  .summary-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .summary-section-2 {
+    grid-row: auto;
+  }
 }
 .summary-limitations {
   background: #f7f5ee;
@@ -979,14 +1077,26 @@ a {
   line-height: 1.7;
 }
 .summary-unavailable {
-  padding: 28px 24px;
+  padding: 30px 24px;
   color: #435c73;
 }
+.summary-empty-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 680px;
+  margin-bottom: 18px;
+}
 .unavailable-icon {
-  display: block;
-  font-size: 24px;
-  color: #627b92;
-  margin-bottom: 14px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  color: var(--primary);
+  background: #edf4ff;
+  border-radius: 12px;
+  font-size: 21px;
 }
 .summary-unavailable h3 {
   font-size: 17px;
@@ -999,6 +1109,18 @@ a {
   line-height: 1.8;
   max-width: 500px;
   margin-bottom: 18px;
+}
+.summary-unavailable > .ant-alert {
+  max-width: 680px;
+  margin-bottom: 16px;
+}
+.summary-safety-copy {
+  margin: 14px 0 0 !important;
+  color: #6c7d8e;
+  font-size: 11px !important;
+}
+.clinical-summary > .ant-alert {
+  margin-top: 14px;
 }
 .feedback-panel {
   background: white;
@@ -1245,9 +1367,10 @@ a {
     gap: 1px;
   }
   .review-tabs > .ant-tabs-nav {
-    padding: 0 16px;
+    padding: 7px 12px;
   }
   .review-tabs .ant-tabs-tab {
+    padding: 7px 10px;
     font-size: 12px;
   }
   .review-tabs .ant-tabs-nav-list {

@@ -37,6 +37,7 @@ from ehr.models import (
 )
 from ehr.search import Encoder, IndexUnavailable, SearchIndex, SentenceEncoder
 from ehr.storage import Store
+from ehr.summarization import make_provider, summarize_patient
 from ehr.timeline import PatientTimeline, build_timeline
 
 
@@ -83,6 +84,12 @@ class RecordDetail(Model):
     fhir_resources: list[dict[str, Any]]
 
 
+class SummaryGenerationResponse(Model):
+    status: Literal["generated", "cached"]
+    summary: SummaryView
+    search_index_status: Literal["rebuilt", "unchanged", "not_configured", "failed"]
+
+
 def create_app(settings: Settings | None = None, encoder: Encoder | None = None) -> FastAPI:
     settings = settings or Settings()
     store: Store | None = None
@@ -114,6 +121,27 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
             raise HTTPException(503, "Database has not started")
         return store
 
+    def summary_view(patient_id: str) -> SummaryView:
+        cached = database().summary(patient_id)
+        if cached is None:
+            return SummaryView(status="unavailable")
+        return SummaryView(
+            status=cached["status"],
+            data=cached["data"] if cached["status"] == "ready" else None,
+            generated_at=cached["generated_at"],
+            provider=cached["provider"],
+            model=cached["model"],
+            error=cached["error"],
+        )
+
+    def summary_provider_ready() -> bool:
+        key = (
+            settings.gemini_api_key
+            if settings.llm_provider == "gemini"
+            else settings.openai_api_key
+        )
+        return bool(key and key.get_secret_value())
+
     @app.exception_handler(IndexUnavailable)
     async def unavailable(_: Any, exc: IndexUnavailable) -> JSONResponse:
         return JSONResponse(status_code=503, content={"detail": str(exc)})
@@ -130,6 +158,7 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
             "search_ready": state is not None,
             "indexed_chunks": state["chunks"] if state else 0,
             "summary_provider": settings.llm_provider,
+            "summary_ready": summary_provider_ready(),
         }
 
     @app.post("/search", response_model=SearchResponse)
@@ -229,17 +258,6 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
         patient = db.patient(patient_id)
         if patient is None:
             raise HTTPException(404, "Patient not found")
-        cached = db.summary(patient_id)
-        view = SummaryView(status="unavailable")
-        if cached:
-            view = SummaryView(
-                status=cached["status"],
-                data=cached["data"] if cached["status"] == "ready" else None,
-                generated_at=cached["generated_at"],
-                provider=cached["provider"],
-                model=cached["model"],
-                error=cached["error"],
-            )
         records = sorted(
             db.records(patient_id),
             key=lambda record: (record.record_date or date.min, record.id),
@@ -247,7 +265,7 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
         )
         return PatientDetail(
             patient=patient,
-            summary=view,
+            summary=summary_view(patient_id),
             records=[
                 RecordPreview(
                     id=record.id,
@@ -274,6 +292,47 @@ def create_app(settings: Settings | None = None, encoder: Encoder | None = None)
         if timeline is None:
             raise HTTPException(404, "Patient not found")
         return timeline
+
+    @app.post(
+        "/patients/{patient_id}/summary",
+        response_model=SummaryGenerationResponse,
+    )
+    def generate_patient_summary(patient_id: str) -> SummaryGenerationResponse:
+        db = database()
+        if db.patient(patient_id) is None:
+            raise HTTPException(404, "Patient not found")
+        try:
+            provider = make_provider(settings)
+        except ValueError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        try:
+            status = summarize_patient(db, patient_id, provider)
+        except Exception as exc:
+            raise HTTPException(
+                502,
+                "The AI provider could not generate a valid source-grounded summary. "
+                "The patient records were not changed.",
+            ) from exc
+
+        index_status: Literal["rebuilt", "unchanged", "not_configured", "failed"]
+        if status == "cached":
+            index_status = "unchanged"
+        elif index is None:
+            index_status = "not_configured"
+        else:
+            try:
+                index.rebuild()
+                index_status = "rebuilt"
+            except Exception:
+                index_status = "failed"
+        view = summary_view(patient_id)
+        if view.status != "ready" or view.data is None:
+            raise HTTPException(500, "Summary was generated but could not be loaded")
+        return SummaryGenerationResponse(
+            status=status,
+            summary=view,
+            search_index_status=index_status,
+        )
 
     @app.get("/intake", response_model=list[IntakeDraftSummary])
     def intake_drafts() -> list[IntakeDraftSummary]:

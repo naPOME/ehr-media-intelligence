@@ -42,13 +42,15 @@ Open http://127.0.0.1:5173. The development server forwards `/api` requests to t
 
 - `/overview` shows library counts, recent patient records, and available patient summaries.
 - `/patients` provides the full patient table. Search by name or MRN; filter by gender, summary state, or latest record date. Sorting and pagination run on the server. Column settings, density, selection across pages, and CSV exports are available in the toolbar.
-- `/patients/:id` opens the patient chart. The Timeline tab groups records into encounters and shows repeated lab values against their reference range. Type, date, and abnormal-result filters narrow the history. Selecting an item opens its source record. A `record` query parameter opens a particular source; `tab=summary` opens the summary. The patient banner stays visible while chart content scrolls.
+- `/patients/:id` opens the patient chart. The Timeline tab groups records into encounters and shows repeated lab values against their reference range. Type, date, and abnormal-result filters narrow the history. The Patient summary tab can generate or update a source-linked AI summary when the configured provider is available. Selecting a timeline item or summary citation opens its source record. A `record` query parameter opens a particular source; `tab=summary` opens the summary. The patient banner stays visible while chart content scrolls.
 - `/records` searches across patients. Searches inside a chart are constrained to that patient before ranking.
 - `/intake` previews JSON, CSV, or TXT exports before publication. It shows every normalization change, duplicate or identity decision, and the FHIR resources validated for each record. Only records marked Ready or Update are published; rejected and duplicate rows remain visible in the audit.
 
 CSV export includes every matching row, regardless of the displayed page. Selected-row exports include the selected identities. Spreadsheet formula prefixes are escaped. Table preferences and patient selections are not saved in browser storage.
 
 The overview displays only ready summaries. Missing, failed, or outdated summaries never block source review. Without a configured provider key, the summary panel stays empty; there is no fabricated AI content.
+
+Choosing **Generate summary** sends the validated FHIR-derived patient history to the configured Gemini or OpenAI provider. Every factual item must cite a stored source record. The backend rejects unknown citations and summaries of 200 words or more, caches successful output by patient history and model, and refreshes semantic search after a new summary. The UI explains when the provider is unavailable, allows generation failures to be retried, hides provider/model details from the generated summary, and keeps the clinical-use disclaimer visible.
 
 ```powershell
 npm run typecheck
@@ -161,6 +163,7 @@ The index records its dataset/model fingerprint. Changed data makes it stale, an
 | `GET /patients/{id}` | Demographics, summary state/content, newest-first record list |
 | `GET /patients/{id}/bundle` | Patient's stored FHIR Bundle |
 | `GET /patients/{id}/timeline` | Encounter-grouped history, repeated lab trends, and abnormal-result counts |
+| `POST /patients/{id}/summary` | Generate or reuse a validated source-linked AI summary and refresh semantic search |
 | `GET /records/{id}` | Cleaned record, original row, changes, and linked FHIR resources |
 | `GET /ingestion-runs/{id}` | Cleaning decisions, counts, issues, and Bundle validation results |
 | `GET /intake` | Recent intake previews and publication state |

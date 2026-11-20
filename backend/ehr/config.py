@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     )
     data_dir: Path = BACKEND_DIR.parent / "data"
     llm_provider: Literal["gemini", "openai"] = "gemini"
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.5-flash-lite"
     openai_model: str = "gpt-4o-mini"
     gemini_api_key: SecretStr | None = Field(default=None, validation_alias="GEMINI_API_KEY")
     openai_api_key: SecretStr | None = Field(default=None, validation_alias="OPENAI_API_KEY")

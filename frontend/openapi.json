@@ -661,6 +661,45 @@
                                                                                     }
                                                                   }
                                                       },
+                  "/patients/{patient_id}/summary":  {
+                                                         "post":  {
+                                                                      "summary":  "Generate Patient Summary",
+                                                                      "operationId":  "generate_patient_summary_patients__patient_id__summary_post",
+                                                                      "parameters":  [
+                                                                                         {
+                                                                                             "name":  "patient_id",
+                                                                                             "in":  "path",
+                                                                                             "required":  true,
+                                                                                             "schema":  {
+                                                                                                            "type":  "string",
+                                                                                                            "title":  "Patient Id"
+                                                                                                        }
+                                                                                         }
+                                                                                     ],
+                                                                      "responses":  {
+                                                                                        "200":  {
+                                                                                                    "description":  "Successful Response",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/SummaryGenerationResponse"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                },
+                                                                                        "422":  {
+                                                                                                    "description":  "Validation Error",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                }
+                                                                                    }
+                                                                  }
+                                                     },
                   "/intake":  {
                                   "get":  {
                                               "summary":  "Intake Drafts",
@@ -2097,6 +2136,39 @@
                                                                            ],
                                                               "title":  "SearchResponse"
                                                           },
+                                       "SummaryGenerationResponse":  {
+                                                                         "properties":  {
+                                                                                            "status":  {
+                                                                                                           "type":  "string",
+                                                                                                           "enum":  [
+                                                                                                                        "generated",
+                                                                                                                        "cached"
+                                                                                                                    ],
+                                                                                                           "title":  "Status"
+                                                                                                       },
+                                                                                            "summary":  {
+                                                                                                            "$ref":  "#/components/schemas/SummaryView"
+                                                                                                        },
+                                                                                            "search_index_status":  {
+                                                                                                                        "type":  "string",
+                                                                                                                        "enum":  [
+                                                                                                                                     "rebuilt",
+                                                                                                                                     "unchanged",
+                                                                                                                                     "not_configured",
+                                                                                                                                     "failed"
+                                                                                                                                 ],
+                                                                                                                        "title":  "Search Index Status"
+                                                                                                                    }
+                                                                                        },
+                                                                         "additionalProperties":  false,
+                                                                         "type":  "object",
+                                                                         "required":  [
+                                                                                          "status",
+                                                                                          "summary",
+                                                                                          "search_index_status"
+                                                                                      ],
+                                                                         "title":  "SummaryGenerationResponse"
+                                                                     },
                                        "SummaryItem":  {
                                                            "properties":  {
                                                                               "text":  {

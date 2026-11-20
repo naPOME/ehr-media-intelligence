@@ -1669,7 +1669,7 @@
   margin: 0 0 8px;
 }
 .dashboard-shell .record-workspace .review-tabs .ant-tabs-tab {
-  padding-block: 11px;
+  padding: 7px 14px;
 }
 @media (min-width: 992px) and (max-height: 740px) {
   .dashboard-shell .clinical-main:has(> .record-workspace) {

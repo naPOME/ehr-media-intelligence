@@ -157,6 +157,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patients/{patient_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Patient Summary */
+        post: operations["generate_patient_summary_patients__patient_id__summary_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/intake": {
         parameters: {
             query?: never;
@@ -658,6 +675,20 @@ export interface components {
             /** Elapsed Ms */
             elapsed_ms: number;
         };
+        /** SummaryGenerationResponse */
+        SummaryGenerationResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "generated" | "cached";
+            summary: components["schemas"]["SummaryView"];
+            /**
+             * Search Index Status
+             * @enum {string}
+             */
+            search_index_status: "rebuilt" | "unchanged" | "not_configured" | "failed";
+        };
         /** SummaryItem */
         SummaryItem: {
             /** Text */
@@ -1014,6 +1045,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PatientTimeline"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_patient_summary_patients__patient_id__summary_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryGenerationResponse"];
                 };
             };
             /** @description Validation Error */

@@ -15,24 +15,34 @@ export type IntakePreview = components["schemas"]["IntakePreview"];
 export type IntakeItem = components["schemas"]["IntakeItem"];
 export type IntakeDraftSummary = components["schemas"]["IntakeDraftSummary"];
 export type IntakePublishResult = components["schemas"]["IntakePublishResult"];
+export type SummaryGenerationResponse =
+  components["schemas"]["SummaryGenerationResponse"];
 export type SearchFilters = {
   patientId?: string;
   resourceType?: ResourceType;
   dateFrom?: string;
   dateTo?: string;
 };
-export type Health = { searchReady: boolean; provider: string };
+export type Health = {
+  searchReady: boolean;
+  summaryReady: boolean;
+  provider: string;
+};
 
 export class ApiError extends Error {
-  constructor(public readonly status: number) {
+  constructor(
+    public readonly status: number,
+    detail?: string,
+  ) {
     super(
-      status === 503
-        ? "The record library is temporarily unavailable. Please try again shortly."
-        : status === 404
-          ? "This record is no longer available."
-          : status === 422
-            ? "Check your search and filter values, then try again."
-            : "We couldn't load this information. Please try again.",
+      detail ||
+        (status === 503
+          ? "The record library is temporarily unavailable. Please try again shortly."
+          : status === 404
+            ? "This record is no longer available."
+            : status === 422
+              ? "Check your search and filter values, then try again."
+              : "We couldn't load this information. Please try again."),
     );
     this.name = "ApiError";
   }
@@ -106,6 +116,24 @@ export async function getPatientTimeline(id: string, signal: AbortSignal) {
   return result.data;
 }
 
+export async function generatePatientSummary(id: string) {
+  const result = await client.POST("/patients/{patient_id}/summary", {
+    params: { path: { patient_id: id } },
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!result.data || !result.response.ok) {
+    const detail =
+      result.error &&
+      typeof result.error === "object" &&
+      "detail" in result.error &&
+      typeof result.error.detail === "string"
+        ? result.error.detail
+        : undefined;
+    throw new ApiError(result.response.status, detail);
+  }
+  return result.data;
+}
+
 export async function getIntakeDrafts(signal: AbortSignal) {
   const result = await client.GET("/intake", {
     signal: requestSignal(signal),
@@ -145,6 +173,7 @@ export async function getHealth(signal: AbortSignal): Promise<Health> {
     throw new ApiError(result.response.status || 500);
   return {
     searchReady: result.data.search_ready,
+    summaryReady: result.data.summary_ready === true,
     provider:
       typeof result.data.summary_provider === "string"
         ? result.data.summary_provider
