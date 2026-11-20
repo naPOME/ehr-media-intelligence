@@ -13,7 +13,7 @@ def test_normalizes_dates_demographics_and_logs_changes(raw_record: dict[str, An
     record = clean_record(raw_record, "input.json")
     assert record.patient.mrn == "MRN00042"
     assert record.patient.dob.isoformat() == "1985-03-14"
-    assert record.patient.name == "Synthetic Hana"
+    assert record.patient.name == "Patient 42"
     assert record.patient.gender == "female"
     assert {item.field for item in record.changes} >= {"mrn", "dob", "gender", "name"}
     assert record.text == raw_record["text"]

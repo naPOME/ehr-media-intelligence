@@ -189,6 +189,7 @@ class SearchIndex:
         resource_type: ResourceType | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        patient_id: str | None = None,
     ) -> SearchResponse:
         start = time.perf_counter()
         if not query.strip():
@@ -199,6 +200,8 @@ class SearchIndex:
             state = self.state()
             collection = self.client.get_collection(state["collection"], embedding_function=None)
             filters: list[Where] = []
+            if patient_id:
+                filters.append({"patient_id": patient_id})
             if resource_type:
                 filters.append({"resource_type": resource_type})
             if date_from or date_to:

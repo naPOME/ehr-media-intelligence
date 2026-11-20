@@ -1,6 +1,6 @@
-# EHR Media Intelligence backend
+# Everwell Clinic - EHR Media Intelligence
 
-This backend cleans synthetic patient exports, converts them to FHIR R4, creates short AI summaries, and searches the records by meaning. It includes 50 synthetic records across 10 patients. The React/Ant Design frontend has not been built yet.
+Everwell Clinic is a React and Ant Design workspace for finding patients, reviewing longitudinal records, and tracing AI summaries to the source. Its FastAPI backend cleans patient exports, validates FHIR R4 resources, and searches records by meaning. The included demo contains 50 fictional records across 10 patients.
 
 ## Run locally
 
@@ -29,6 +29,40 @@ To use the assessment's named OpenAI provider, set `EHR_LLM_PROVIDER=openai`, se
 
 Run preprocessing commands before starting the server. Stop the server for imports and index rebuilds, then restart it. This local implementation assumes one preprocessing writer.
 
+## Frontend
+
+Keep the backend running on port 8011. In a second terminal, from `frontend/`:
+
+```powershell
+npm ci
+npm run dev
+```
+
+Open http://127.0.0.1:5173. The development server forwards `/api` requests to the backend; no browser credentials are needed for this local demo.
+
+- `/overview` shows library counts, recent patient records, and available patient summaries.
+- `/patients` provides the full patient table. Search by name or MRN; filter by gender, summary state, or latest record date. Sorting and pagination run on the server. Column settings, density, selection across pages, and CSV exports are available in the toolbar.
+- `/patients/:id` opens the patient chart. The Timeline tab groups records into encounters and shows repeated lab values against their reference range. Type, date, and abnormal-result filters narrow the history. Selecting an item opens its source record. A `record` query parameter opens a particular source; `tab=summary` opens the summary. The patient banner stays visible while chart content scrolls.
+- `/records` searches across patients. Searches inside a chart are constrained to that patient before ranking.
+
+CSV export includes every matching row, regardless of the displayed page. Selected-row exports include the selected identities. Spreadsheet formula prefixes are escaped. Table preferences and patient selections are not saved in browser storage.
+
+The overview displays only ready summaries. Missing, failed, or outdated summaries never block source review. Without a configured provider key, the summary panel stays empty; there is no fabricated AI content.
+
+```powershell
+npm run typecheck
+npm run lint
+npm run build
+npx playwright install chromium
+npm test
+$env:EHR_LIVE_API='1'
+npm run test:live
+```
+
+Browser tests cover desktop/mobile layouts, directory paging/sorting/export, deep links and browser history, patient-scoped search, source citations, request races, scroll behavior, and automated accessibility checks. The live test uses the running local backend. These checks do not establish clinical validation.
+
+API types are generated from `frontend/openapi.json`. After changing the backend contract, export `app.openapi()` to that file, then run `npm run api:types` from `frontend/`. A backend test detects schema drift. `VITE_API_BASE_URL` can select an API base URL; it must never contain a provider secret. Production hosting needs an SPA fallback for these routes and a reverse proxy for `/api` (or a configured API base URL).
+
 ## Input contract
 
 JSON input is an array of objects. CSV uses the same field names; its `labs` column contains a JSON array. The included files are complete examples.
@@ -41,7 +75,7 @@ Required fields are `record_id`, `mrn`, `name`, `kind`, `title`, and `text`. Sup
   "source_system": "synthetic",
   "mrn": "mrn-00001",
   "patient_id": "source-person-1",
-  "name": "Synthetic Patient 01",
+  "name": "Patient 01",
   "dob": "14/03/1985",
   "gender": "F",
   "kind": "lab",
@@ -102,9 +136,14 @@ The index records its dataset/model fingerprint. Changed data makes it stale, an
 | Request | Response |
 | --- | --- |
 | `GET /health` | Process status and separate search readiness |
+| `GET /overview` | Counts, six recent patient records, and up to three ready summaries |
+| `GET /library` | Library counts and latest clinical record date |
+| `GET /patients` | Filtered, sorted patient directory with offset/limit pagination |
+| `GET /patients/export` | All matching patient rows as CSV, or specified `patient_ids` |
 | `POST /search` | Up to five distinct ranked matches with patient identity, dates, types, excerpts, scores, summary snippets |
 | `GET /patients/{id}` | Demographics, summary state/content, newest-first record list |
 | `GET /patients/{id}/bundle` | Patient's stored FHIR Bundle |
+| `GET /patients/{id}/timeline` | Encounter-grouped history, repeated lab trends, and abnormal-result counts |
 | `GET /records/{id}` | Cleaned record, original row, changes, and linked FHIR resources |
 | `GET /ingestion-runs/{id}` | Cleaning decisions, counts, issues, and Bundle validation results |
 
@@ -112,7 +151,9 @@ The index records its dataset/model fingerprint. Changed data makes it stale, an
 Invoke-RestMethod -Uri 'http://127.0.0.1:8011/search?resource_type=DiagnosticReport&date_from=2026-03-01&date_to=2026-03-31' -Method Post -ContentType 'application/json' -Body '{"query":"abnormal kidney results"}'
 ```
 
-Search filters are query parameters. Resource type accepts `Patient`, `DocumentReference`, or `DiagnosticReport`. Date bounds are inclusive and use each record's clinical date. Scores are cosine search similarity, not probabilities or clinical confidence. Missing entities return 404; invalid requests return 422; missing/stale indexes return 503. CORS permits the configured frontend origin, initially `http://localhost:5173`.
+Patient directory filters accept `query`, `gender`, `summary_status`, `date_from`, and `date_to` (latest record date). Its `sort_by` is a validated column name and `order` is `asc` or `desc`; missing dates sort last. `offset` and `limit` control paging (maximum 100 rows per page).
+
+Search filters are query parameters. `patient_id` optionally limits search to one patient. Resource type accepts `Patient`, `DocumentReference`, or `DiagnosticReport`. Date bounds are inclusive and use each record's clinical date. Scores are cosine search similarity, not probabilities or clinical confidence. Missing entities return 404; invalid requests return 422; missing/stale indexes return 503. CORS permits the configured frontend origin, initially `http://localhost:5173`.
 
 ## Verification
 
@@ -129,4 +170,4 @@ Regular tests use deterministic test-only encoders/providers and a real temporar
 
 The included GitHub Actions workflow runs lint, format, strict types, and all model tests when this directory is used as its own repository. The workflow has not been executed on GitHub from this checkout.
 
-This is a local synthetic-data assessment backend. Authentication, hospital connectivity, OCR/PDF extraction, machine interfaces, and deployment are not implemented. No real patient data belongs in this project.
+This is a local demo-data assessment application. Authentication, hospital connectivity, OCR/PDF extraction, machine interfaces, and deployment are not implemented. No real patient data belongs in this project.

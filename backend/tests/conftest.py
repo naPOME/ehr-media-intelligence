@@ -24,7 +24,7 @@ def raw_record() -> dict[str, Any]:
         "record_id": "lab-1",
         "mrn": "mrn-00042",
         "patient_id": "source-patient-42",
-        "name": "Synthetic   Hana",
+        "name": "Patient   42",
         "dob": "14/03/1985",
         "gender": "F",
         "kind": "lab",
